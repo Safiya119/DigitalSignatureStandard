@@ -1,0 +1,155 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Signature System</title>
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            margin: 0;
+            padding: 0;
+            background-color: #d0c2ee;
+        }
+
+        .container {
+            max-width: 600px;
+            margin-top: 100px;
+            margin-bottom: 300px;
+            margin-left: 350px;
+            margin-right: 350px;
+            padding: 20px;
+            background-color: #bad3e4;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 90px);
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 9px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 9px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .output {
+            margin-top: 20px;
+        }
+
+        .output p {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .copy-btn {
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .copy-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Digital Signature System</h1>
+
+        <h2>Generate Certificate</h2>
+        <input type="text" id="message" placeholder="Enter message">
+        <button onclick="generateCertificate()">Generate Certificate</button>
+        <div id="generatedCertificate" class="output"></div>
+
+        <h2>Verify Certificate</h2>
+        <input type="text" id="verifyMessage" placeholder="Enter message">
+        <input type="text" id="verifySignature" placeholder="Enter signature">
+        <button onclick="verifyCertificate()">Verify Certificate</button>
+        <div id="verificationResult" class="output"></div>
+    </div>
+
+    <script>
+        function copyCertificate() {
+            const certificateText = document.getElementById('certificateText');
+            certificateText.select();
+            document.execCommand('copy');
+            alert('Certificate text copied to clipboard!');
+        }
+
+        function generateCertificate() {
+            const message = document.getElementById('message').value;
+            fetch('/generate_certificate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const certificateHtml = `<input type="text" id="certificateText" value="${data.signature}" readonly>
+                                          <button class="copy-btn" onclick="copyCertificate()">Copy</button>`;
+                    document.getElementById('generatedCertificate').innerHTML = certificateHtml;
+                })
+                .catch(error => {
+                    document.getElementById('generatedCertificate').innerHTML = '<p class="error">Error: ' + error.message + '</p>';
+                });
+        }
+
+        function verifyCertificate() {
+            const message = document.getElementById('verifyMessage').value;
+            const signature = document.getElementById('verifySignature').value;
+            fetch('/verify_certificate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message, signature: signature })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const resultMessage = data.valid ? 'valid' : 'invalid';
+                    const className = data.valid ? 'success' : 'error';
+                    document.getElementById('verificationResult').innerHTML = '<p class="' + className + '">Certificate is ' + resultMessage + '</p>';
+                })
+                .catch(error => {
+                    document.getElementById('verificationResult').innerHTML = '<p class="error">Error:' + error.message + '</p>';
+                });
+        }
+    </script>
+</body>
+
+</html>
